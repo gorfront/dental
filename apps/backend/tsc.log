@@ -1,0 +1,13 @@
+src/config/database.ts(1,22): error TS2307: Cannot find module '@neondatabase/serverless' or its corresponding type declarations.
+src/config/database.ts(2,25): error TS2307: Cannot find module 'drizzle-orm/neon-http' or its corresponding type declarations.
+src/config/database.ts(3,20): error TS2307: Cannot find module 'dotenv' or its corresponding type declarations.
+src/controllers/appointment.controller.ts(2,44): error TS2307: Cannot find module '../models' or its corresponding type declarations.
+src/controllers/appointment.controller.ts(3,41): error TS2307: Cannot find module 'shared' or its corresponding type declarations.
+src/controllers/appointment.controller.ts(4,20): error TS2307: Cannot find module 'sequelize' or its corresponding type declarations.
+src/controllers/auth.controller.ts(3,22): error TS2307: Cannot find module '../models' or its corresponding type declarations.
+src/controllers/service.controller.ts(2,25): error TS2307: Cannot find module '../models' or its corresponding type declarations.
+src/controllers/xray.controller.ts(2,22): error TS2307: Cannot find module '../models' or its corresponding type declarations.
+src/index.ts(8,10): error TS2305: Module '"./config/database"' has no exported member 'connectDB'.
+src/index.ts(10,27): error TS2307: Cannot find module './models' or its corresponding type declarations.
+src/index.ts(37,14): error TS18048: 'process.env.local' is possibly 'undefined'.
+src/index.ts(37,32): error TS2339: Property 'PORT' does not exist on type 'string'.
