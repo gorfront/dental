@@ -160,7 +160,7 @@ export default function PatientPortal() {
   const { t } = useTranslation();
   const [tab, setTab] = useState<Tab>("dashboard");
   const [, navigate] = useLocation();
-  const { user, patientId, fetchMe } = useAuthStore();
+  const { user, patientId, meLoaded, fetchMe } = useAuthStore();
 
   // All data
   const [profile, setProfile] = useState<PatientItem | null>(null);
@@ -168,15 +168,22 @@ export default function PatientPortal() {
   const [xrays, setXrays] = useState<XRayItem[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Redirect if not logged in or not patient
+  // Step 1: hydrate store from token if not yet loaded
   useEffect(() => {
-    if (!user) {
-      navigate("/login");
+    if (!meLoaded) { fetchMe(); }
+  }, []); // once on mount
+
+  // Step 2: load data once we have user + patientId
+  useEffect(() => {
+    if (!user) { navigate("/login"); return; }
+    if (!meLoaded) return; // wait for fetchMe
+
+    const id = patientId;
+    if (!id) {
+      // Logged in but no patient profile (e.g. doctor visiting wrong route)
+      setLoading(false);
       return;
     }
-    // Load profile + appointments
-    const id = patientId;
-    if (!id) { fetchMe(); return; }
 
     Promise.all([
       api.get<PatientItem>(`/api/patients/${id}`),
@@ -185,7 +192,7 @@ export default function PatientPortal() {
       setProfile(p);
       setAppointments(a);
     }).finally(() => setLoading(false));
-  }, [user, patientId]);
+  }, [user, patientId, meLoaded]);
 
   // Load xrays when tab selected
   useEffect(() => {

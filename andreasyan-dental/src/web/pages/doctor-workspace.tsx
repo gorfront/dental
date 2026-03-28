@@ -249,7 +249,7 @@ export default function DoctorWorkspace() {
   const { t } = useTranslation();
   const [tab, setTab] = useState<Tab>("schedule");
   const [, navigate] = useLocation();
-  const { user, doctorId, fetchMe } = useAuthStore();
+  const { user, doctorId, meLoaded, fetchMe } = useAuthStore();
 
   const [appointments, setAppointments] = useState<AppointmentItem[]>([]);
   const [patients, setPatients] = useState<PatientItem[]>([]);
@@ -260,13 +260,24 @@ export default function DoctorWorkspace() {
 
   const today = new Date().toISOString().split("T")[0];
 
+  // Step 1: if token is in storage but store isn't hydrated yet, fetch once
+  useEffect(() => {
+    if (!meLoaded) { fetchMe(); }
+  }, []); // runs once on mount only
+
+  // Step 2: once we have user + doctorId, load schedule
   useEffect(() => {
     if (!user) { navigate("/login"); return; }
-    if (!doctorId) { fetchMe(); return; }
+    if (!meLoaded) return; // wait for fetchMe to finish
+    if (!doctorId) {
+      // Doctor role but no profile row — show a helpful message, don't loop
+      setLoadingAppts(false);
+      return;
+    }
     api.get<AppointmentItem[]>(`/api/doctors/${doctorId}/appointments?date=${today}`)
       .then(setAppointments)
       .finally(() => setLoadingAppts(false));
-  }, [user, doctorId]);
+  }, [user, doctorId, meLoaded]);
 
   useEffect(() => {
     if (tab === "patients" && patients.length === 0) {
@@ -295,6 +306,30 @@ export default function DoctorWorkspace() {
 
   const avatarUrl = user?.avatarUrl
     ?? `https://api.dicebear.com/9.x/personas/svg?seed=${user?.email}&backgroundColor=0B6E72`;
+
+  // Doctor account exists but no doctors table row yet — admin hasn't set up their profile
+  if (meLoaded && user && !doctorId) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-6">
+        <div className="max-w-md w-full text-center glass rounded-3xl p-10 border border-primary/20">
+          <div className="text-6xl mb-6">🦷</div>
+          <h2 className="text-xl font-bold font-[family-name:var(--font-display)] text-foreground mb-3">
+            Profile Not Set Up Yet
+          </h2>
+          <p className="text-muted-foreground text-sm leading-relaxed">
+            Your doctor account (<strong>{user.email}</strong>) has been created, but your clinic profile hasn't been configured by the administrator yet.
+          </p>
+          <p className="text-muted-foreground text-sm mt-3">
+            Please contact the admin to complete your setup.
+          </p>
+          <button onClick={() => { useAuthStore.getState().logout(); navigate("/"); }}
+            className="mt-6 text-sm text-primary hover:underline">
+            ← Sign out
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">

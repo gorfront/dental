@@ -208,7 +208,7 @@ export default function AdminPanel() {
   const { t } = useTranslation();
   const [tab, setTab] = useState<Tab>("dashboard");
   const [, navigate] = useLocation();
-  const { user, logout, fetchMe } = useAuthStore();
+  const { user, logout, meLoaded, fetchMe } = useAuthStore();
 
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [appointments, setAppointments] = useState<AppointmentItem[]>([]);
@@ -218,13 +218,18 @@ export default function AdminPanel() {
   const [loadingPatients, setLoadingPatients] = useState(false);
   const [liveAlert, setLiveAlert] = useState(true);
 
+  // Hydrate from token once on mount
   useEffect(() => {
+    if (!meLoaded) { fetchMe(); }
+  }, []);
+
+  useEffect(() => {
+    if (!meLoaded) return;
     if (!user) { navigate("/login"); return; }
-    // Load stats on mount
     api.get<AdminStats>("/api/admin/stats")
       .then(setStats)
       .finally(() => setLoadingStats(false));
-  }, [user]);
+  }, [user, meLoaded]);
 
   useEffect(() => {
     if (tab === "schedule" && appointments.length === 0) {
